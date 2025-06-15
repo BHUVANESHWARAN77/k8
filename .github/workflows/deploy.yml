@@ -2,39 +2,44 @@ name: Deploy to EKS
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
+
+env:
+  AWS_REGION: us-east-1         # <— set once, reuse everywhere
+  CLUSTER_NAME: eks-cluster     # <— your cluster name
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Configure AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v2
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ap-south-1  # replace with your region
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
 
-    - name: Setup kubectl
-      uses: azure/setup-kubectl@v3
-      with:
-        version: 'latest'
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'latest'
 
-    - name: Update kubeconfig
-      run: |
-        aws eks update-kubeconfig --region ap-south-1 --name your-cluster-name
+      - name: Update kubeconfig for EKS
+        run: |
+          aws eks update-kubeconfig \
+            --region $AWS_REGION \
+            --name   $CLUSTER_NAME
 
-    - name: Deploy Backend
-      run: |
-        kubectl apply -f backend/backend-deployment.yaml
-        kubectl apply -f backend/backend-service.yaml
+      - name: Deploy backend
+        run: |
+          kubectl apply -f backend/backend-deployment.yaml
+          kubectl apply -f backend/backend-service.yaml
 
-    - name: Deploy Frontend
-      run: |
-        kubectl apply -f frontend/frontend-deployment.yaml
-        kubectl apply -f frontend/frontend-service.yaml
+      - name: Deploy frontend
+        run: |
+          kubectl apply -f frontend/frontend-deployment.yaml
+          kubectl apply -f frontend/frontend-service.yaml
