@@ -5,8 +5,8 @@ on:
     branches: [main]
 
 env:
-  AWS_REGION: us-east-1         # <— set once, reuse everywhere
-  CLUSTER_NAME: eks-cluster     # <— your cluster name
+  AWS_REGION: us-east-1
+  CLUSTER_NAME: eks-cluster
 
 jobs:
   deploy:
@@ -32,14 +32,15 @@ jobs:
         run: |
           aws eks update-kubeconfig \
             --region $AWS_REGION \
-            --name   $CLUSTER_NAME
+            --name $CLUSTER_NAME
 
       - name: Deploy backend
         run: |
-          kubectl apply -f backend/backend-deployment.yaml
-          kubectl apply -f backend/backend-service.yaml
+          kubectl apply -f k8s_manifests/backend-deployment.yaml
+          kubectl apply -f k8s_manifests/backend-service.yaml
 
       - name: Deploy frontend
         run: |
-          kubectl apply -f frontend/frontend-deployment.yaml
-          kubectl apply -f frontend/frontend-service.yaml
+          kubectl apply -f k8s_manifests/frontend-deployment.yaml
+          kubectl apply -f k8s_manifests/frontend-service.yaml
+
